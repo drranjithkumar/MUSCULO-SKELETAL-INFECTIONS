@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Musculoskeletal Infections — Learning Hub</title>
+<style>
+  :root {
+    --bg: #0f172a;
+    --card: #1e293b;
+    --accent: #38bdf8;
+    --accent2: #f472b6;
+    --text: #e2e8f0;
+    --muted: #94a3b8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    background: radial-gradient(circle at top, #1e293b, var(--bg));
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 48px 20px;
+  }
+  header { text-align: center; max-width: 720px; margin-bottom: 44px; }
+  h1 {
+    font-size: clamp(1.8rem, 4vw, 2.8rem);
+    background: linear-gradient(90deg, var(--accent), var(--accent2));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+    margin-bottom: 12px;
+  }
+  header p { color: var(--muted); font-size: 1.05rem; line-height: 1.5; }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+    gap: 22px;
+    width: 100%;
+    max-width: 960px;
+  }
+  .card {
+    background: var(--card);
+    border: 1px solid rgba(255,255,255,0.06);
+    border-radius: 16px;
+    padding: 28px;
+    text-decoration: none;
+    color: inherit;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+  }
+  .card:hover {
+    transform: translateY(-6px);
+    border-color: var(--accent);
+    box-shadow: 0 12px 30px rgba(56,189,248,0.15);
+  }
+  .icon { font-size: 2.4rem; }
+  .card h2 { font-size: 1.25rem; }
+  .card p { color: var(--muted); font-size: .95rem; line-height: 1.45; flex: 1; }
+  .tag {
+    align-self: flex-start;
+    font-size: .75rem;
+    font-weight: 600;
+    letter-spacing: .5px;
+    text-transform: uppercase;
+    color: var(--accent);
+    background: rgba(56,189,248,0.1);
+    padding: 4px 10px;
+    border-radius: 999px;
+  }
+  footer { margin-top: 48px; color: var(--muted); font-size: .85rem; text-align: center; }
+</style>
+</head>
+<body>
+  <header>
+    <h1>Musculoskeletal Infections</h1>
+    <p>An interactive learning hub for orthopaedic infection education. Pick a module below to start.</p>
+  </header>
+
+  <div class="grid">
+    <a class="card" href="Bone_Detective_Game.html">
+      <div class="icon">🦴</div>
+      <span class="tag">Game</span>
+      <h2>Bone Detective</h2>
+      <p>The Ward Round Challenge — work through clinical cases and crack each diagnosis.</p>
+    </a>
+
+    <a class="card" href="Musculo Skeletal Infections Reading Rounds.html">
+      <div class="icon">📖</div>
+      <span class="tag">Reading</span>
+      <h2>Reading Rounds</h2>
+      <p>Ortho Infection Board — reading-room rounds covering core MSK infection concepts.</p>
+    </a>
+
+    <a class="card" href="Musculoskeletal Infection Cross word.html">
+      <div class="icon">🧩</div>
+      <span class="tag">Puzzle</span>
+      <h2>Crossword</h2>
+      <p>Test your recall with a musculoskeletal infection crossword challenge.</p>
+    </a>
+  </div>
+
+  <footer>Musculoskeletal Infections Learning Hub · Built for interactive study</footer>
+</body>
+</html>

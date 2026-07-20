@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Ortho Infection Board — Reading Room Rounds</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+  :root{
+    --bg: #0b1220;
+    --panel: #131f33;
+    --panel-edge: #24344f;
+    --film: #eaf2ff;
+    --ivory: #f1ede3;
+    --teal: #5fd4d0;
+    --amber: #e8a33d;
+    --dim: #7d8aa3;
+    --used: #0e1524;
+  }
+  *{box-sizing:border-box;}
+  html,body{
+    margin:0; padding:0; height:100%;
+    background:
+      radial-gradient(1200px 600px at 50% -10%, #16223a 0%, var(--bg) 60%);
+    color:var(--ivory);
+    font-family: 'Segoe UI', ui-sans-serif, system-ui, -apple-system, sans-serif;
+    overflow-x:hidden;
+  }
+  .mono{ font-family: ui-monospace, 'JetBrains Mono', 'Courier New', monospace; }
+
+  .wrap{ max-width:1180px; margin:0 auto; padding:22px 18px 60px; }
+
+  header.top{
+    display:flex; align-items:flex-end; justify-content:space-between;
+    gap:20px; flex-wrap:wrap; margin-bottom:18px;
+    border-bottom:1px solid var(--panel-edge); padding-bottom:14px;
+  }
+  .brand-eyebrow{
+    font-size:11px; letter-spacing:.28em; text-transform:uppercase;
+    color:var(--teal); margin:0 0 6px;
+  }
+  h1{
+    margin:0; font-size:clamp(22px,3.4vw,34px); font-weight:700; letter-spacing:.01em;
+  }
+  h1 span{ color:var(--teal); }
+  .subtitle{ color:var(--dim); font-size:13.5px; margin-top:6px; max-width:520px; }
+
+  .scoreboard{ display:flex; gap:14px; }
+  .team-card{
+    background:linear-gradient(180deg, var(--panel), #0f1a2c);
+    border:1px solid var(--panel-edge);
+    border-radius:10px;
+    padding:10px 16px;
+    min-width:150px;
+    text-align:center;
+    position:relative;
+  }
+  .team-card .label{
+    font-size:10.5px; letter-spacing:.18em; text-transform:uppercase; color:var(--dim);
+  }
+  .team-card.a .label{ color:var(--amber); }
+  .team-card.b .label{ color:var(--teal); }
+  .team-card .score{
+    font-size:30px; font-weight:700; margin-top:2px;
+  }
+  .team-card .btnrow{ display:flex; gap:6px; justify-content:center; margin-top:8px; }
+  .stepbtn{
+    background:transparent; border:1px solid var(--panel-edge); color:var(--ivory);
+    width:26px; height:26px; border-radius:6px; cursor:pointer; font-size:14px; line-height:1;
+  }
+  .stepbtn:hover{ border-color:var(--teal); color:var(--teal); }
+
+  .board{
+    display:grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap:8px;
+    margin-top:22px;
+  }
+  .cat-head{
+    background: linear-gradient(180deg, #1a2a45, #101b2e);
+    border:1px solid var(--panel-edge);
+    border-radius:8px 8px 2px 2px;
+    padding:12px 8px 10px;
+    text-align:center;
+    font-size:12.5px;
+    font-weight:700;
+    letter-spacing:.03em;
+    text-transform:uppercase;
+    min-height:56px;
+    display:flex; align-items:center; justify-content:center;
+    color:var(--film);
+  }
+  .tile{
+    background: radial-gradient(120% 160% at 50% 0%, #1a2740 0%, var(--panel) 55%, #0e1830 100%);
+    border:1px solid var(--panel-edge);
+    border-radius:6px;
+    padding:22px 6px;
+    text-align:center;
+    font-family: ui-monospace, 'JetBrains Mono', monospace;
+    font-size:26px;
+    font-weight:700;
+    color:var(--teal);
+    cursor:pointer;
+    transition: transform .12s ease, box-shadow .18s ease, background .18s ease;
+    user-select:none;
+  }
+  .tile:hover{
+    transform: translateY(-2px);
+    box-shadow: 0 0 0 1px var(--teal), 0 8px 24px -8px rgba(95,212,208,.5);
+    background: radial-gradient(120% 160% at 50% 0%, #203353 0%, #17253c 55%, #0e1830 100%);
+  }
+  .tile.used{
+    color: var(--dim);
+    background: var(--used);
+    cursor:default;
+    box-shadow:none;
+  }
+  .tile.used:hover{ transform:none; box-shadow:none; }
+  .tile.used::after{ content:"—"; }
+  .tile.used span{ display:none; }
+
+  footer.legend{
+    margin-top:26px; display:flex; gap:22px; flex-wrap:wrap;
+    color:var(--dim); font-size:12px;
+  }
+  footer.legend b{ color:var(--film); }
+
+  .resetbar{ margin-top:20px; text-align:right; }
+  .ghostbtn{
+    background:transparent; border:1px solid var(--panel-edge); color:var(--dim);
+    padding:8px 14px; border-radius:8px; cursor:pointer; font-size:12.5px;
+  }
+  .ghostbtn:hover{ color:var(--ivory); border-color:var(--ivory); }
+
+  /* Overlay */
+  .overlay{
+    position:fixed; inset:0; background:rgba(5,9,16,.86);
+    display:none; align-items:center; justify-content:center; padding:24px; z-index:50;
+    backdrop-filter: blur(3px);
+  }
+  .overlay.show{ display:flex; }
+  .lightbox{
+    width:min(760px, 92vw);
+    background: linear-gradient(180deg, #101c30, #0a1424);
+    border:1px solid var(--panel-edge);
+    border-radius:16px;
+    padding:38px 34px 30px;
+    position:relative;
+    box-shadow: 0 30px 80px -20px rgba(0,0,0,.7), 0 0 0 1px rgba(95,212,208,.06) inset;
+  }
+  .lightbox .tag{
+    font-size:11px; letter-spacing:.24em; text-transform:uppercase; color:var(--teal);
+    margin-bottom:10px;
+  }
+  .lightbox .pts{
+    position:absolute; top:20px; right:26px;
+    font-family:ui-monospace, monospace; font-size:20px; color:var(--amber); font-weight:700;
+  }
+  .lightbox .qtext{
+    font-size:clamp(17px, 2.4vw, 22px); line-height:1.5; color:var(--film); font-weight:600;
+    min-height:70px;
+  }
+  .ans-block{
+    margin-top:18px; padding-top:16px; border-top:1px dashed var(--panel-edge);
+    display:none;
+  }
+  .ans-block.show{ display:block; }
+  .ans-block .atag{
+    font-size:11px; letter-spacing:.2em; text-transform:uppercase; color:var(--dim); margin-bottom:6px;
+  }
+  .ans-block .atext{ font-size:16.5px; color:var(--ivory); line-height:1.5; }
+
+  .actions{ margin-top:26px; display:flex; gap:10px; flex-wrap:wrap; justify-content:flex-end; }
+  .btn{
+    border:none; border-radius:9px; padding:10px 18px; font-size:13.5px; font-weight:600; cursor:pointer;
+  }
+  .btn.reveal{ background:var(--teal); color:#06222a; }
+  .btn.reveal:hover{ filter:brightness(1.08); }
+  .btn.awardA{ background:var(--amber); color:#3a2400; }
+  .btn.awardB{ background:var(--teal); color:#06222a; }
+  .btn.none{ background:transparent; border:1px solid var(--panel-edge); color:var(--dim); }
+  .btn.none:hover{ color:var(--ivory); border-color:var(--ivory); }
+  .btn[disabled]{ opacity:.35; cursor:not-allowed; }
+
+  @media (max-width:820px){
+    .board{ grid-template-columns: repeat(5, 1fr); gap:5px; }
+    .tile{ font-size:16px; padding:14px 2px; }
+    .cat-head{ font-size:9.5px; min-height:64px; padding:8px 3px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <p class="brand-eyebrow mono">MBBS · Orthopaedics Revision</p>
+      <h1>Reading Room Rounds <span>— MSK Infections</span></h1>
+      <p class="subtitle">Septic arthritis · Tom Smith disease · acute &amp; chronic osteomyelitis · Garré's &amp; Brodie's. Pick a category and a point value — reveal the question, then the answer, then award the points.</p>
+    </div>
+    <div class="scoreboard">
+      <div class="team-card a">
+        <div class="label">Team A</div>
+        <div class="score mono" id="scoreA">0</div>
+        <div class="btnrow">
+          <button class="stepbtn" onclick="bump('A',-100)">−</button>
+          <button class="stepbtn" onclick="bump('A',100)">+</button>
+        </div>
+      </div>
+      <div class="team-card b">
+        <div class="label">Team B</div>
+        <div class="score mono" id="scoreB">0</div>
+        <div class="btnrow">
+          <button class="stepbtn" onclick="bump('B',-100)">−</button>
+          <button class="stepbtn" onclick="bump('B',100)">+</button>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <div class="board" id="board"></div>
+
+  <footer class="legend">
+    <span><b>How to run it:</b> project this screen. Whichever team buzzes in first gets to answer; click their award button once they respond (correctly or not).</span>
+  </footer>
+
+  <div class="resetbar">
+    <button class="ghostbtn" onclick="resetGame()">Reset board &amp; scores</button>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="lightbox">
+    <div class="pts mono" id="lbPts">200</div>
+    <div class="tag mono" id="lbCat">CATEGORY</div>
+    <div class="qtext" id="lbQ">Question text</div>
+    <div class="ans-block" id="ansBlock">
+      <div class="atag mono">ANSWER</div>
+      <div class="atext" id="lbA">Answer text</div>
+    </div>
+    <div class="actions">
+      <button class="btn reveal" id="revealBtn" onclick="revealAnswer()">Reveal answer</button>
+      <button class="btn awardA" id="awardABtn" disabled onclick="award('A')">+ Team A</button>
+      <button class="btn awardB" id="awardBBtn" disabled onclick="award('B')">+ Team B</button>
+      <button class="btn none" onclick="closeOverlay()">Close (no score)</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const DATA = [
+  {
+    cat: "Septic Arthritis",
+    qs: [
+      { pts:100, q:"Most common causative organism of septic arthritis across all age groups?", a:"Staphylococcus aureus." },
+      { pts:200, q:"Name the four Kocher criteria used to distinguish septic arthritis from transient synovitis of the hip in a child.", a:"Fever >38.5°C, non-weight-bearing, ESR >40 mm/hr, WBC >12,000/mm³." },
+      { pts:300, q:"Why must septic arthritis be treated as a surgical emergency rather than managed with antibiotics alone?", a:"Bacterial and host proteolytic enzymes cause irreversible cartilage (chondrolysis) destruction within 24–48 hours." },
+      { pts:400, q:"Which organism is classically implicated in septic arthritis of a sexually active young adult?", a:"Neisseria gonorrhoeae." },
+      { pts:500, q:"Which fastidious Gram-negative organism, often missed on routine culture, is now recognised as a common cause of septic arthritis in toddlers aged 6 months–4 years?", a:"Kingella kingae." },
+    ]
+  },
+  {
+    cat: "Tom Smith & Neonatal",
+    qs: [
+      { pts:100, q:"Tom Smith disease classically affects which joint?", a:"The hip joint." },
+      { pts:200, q:"What structural change occurs at the proximal femoral epiphysis if Tom Smith disease is left untreated?", a:"Epiphyseal separation and destruction, due to spread of infection through the unossified epiphyseal cartilage." },
+      { pts:300, q:"Name a common iatrogenic route of bacterial seeding leading to neonatal septic arthritis of the hip.", a:"Umbilical vessel catheterisation (umbilical artery/vein line) or heel-prick related bacteraemia." },
+      { pts:400, q:"Why is neonatal septic arthritis of the hip so easily missed clinically?", a:"Presentation is subtle — irritability, poor feeding, pseudoparalysis of the limb — often without a high fever or a localising sign that clearly points to the hip." },
+      { pts:500, q:"What long-term deformity can result in a child whose Tom Smith disease was diagnosed late?", a:"Coxa vara, limb-length discrepancy, or frank pathological dislocation of the hip." },
+    ]
+  },
+  {
+    cat: "Acute Osteomyelitis",
+    qs: [
+      { pts:100, q:"What is the most common site of acute haematogenous osteomyelitis in a growing child?", a:"The metaphysis of a long bone." },
+      { pts:200, q:"Name two long bones most classically affected by acute osteomyelitis in children.", a:"Distal femur and proximal tibia (the fastest-growing metaphyses)." },
+      { pts:300, q:"Which imaging modality is most sensitive for detecting acute osteomyelitis within the first week of symptoms?", a:"MRI — it detects marrow oedema and abscess well before plain radiographs change." },
+      { pts:400, q:"Roughly how many days does it take for lytic bone changes to become visible on a plain X-ray in acute osteomyelitis?", a:"About 7–10 days (sometimes up to 14) after symptom onset." },
+      { pts:500, q:"A puncture wound through the sole of a sneaker classically predisposes to osteomyelitis with which organism?", a:"Pseudomonas aeruginosa." },
+    ]
+  },
+  {
+    cat: "Chronic Osteomyelitis",
+    qs: [
+      { pts:100, q:"What is the name for a fragment of dead, separated bone seen in chronic osteomyelitis?", a:"Sequestrum." },
+      { pts:200, q:"What is the name for the shell of new bone that forms around a sequestrum?", a:"Involucrum." },
+      { pts:300, q:"What is the name for the opening in the involucrum through which pus drains to the surface?", a:"Cloaca (draining via a sinus tract)." },
+      { pts:400, q:"What serious complication should be suspected when a long-standing discharging sinus becomes everted, indurated, and starts to bleed?", a:"Marjolin's ulcer — malignant transformation to squamous cell carcinoma within the chronic sinus." },
+      { pts:500, q:"Name a systemic complication that can develop from years of chronic suppuration in osteomyelitis.", a:"Secondary (AA) amyloidosis." },
+    ]
+  },
+  {
+    cat: "Brodie's & Garré's",
+    qs: [
+      { pts:100, q:"Brodie's abscess is a subacute form of osteomyelitis classically found in which bone?", a:"The tibia (metaphysis of a long bone)." },
+      { pts:200, q:"What relatively specific MRI finding is described in Brodie's abscess?", a:"The 'penumbra sign' — a thin rim of intermediate signal intensity between the central abscess and the surrounding sclerotic bone." },
+      { pts:300, q:"Which chronic osteomyelitis variant shows dense sclerotic bone thickening with NO abscess, sequestrum, or sinus?", a:"Garré's (chronic non-suppurative) sclerosing osteomyelitis." },
+      { pts:400, q:"Besides long bones, Garré's osteomyelitis classically involves which bone in the head and neck region, usually of odontogenic origin?", a:"The mandible." },
+      { pts:500, q:"In one line — how would you tell Brodie's abscess apart from Garré's osteomyelitis on a plain X-ray?", a:"Brodie's = a discrete lucent lesion with a sclerotic rim (an abscess); Garré's = diffuse fusiform sclerotic thickening of the cortex with no lucent area at all." },
+    ]
+  },
+];
+
+let scores = { A:0, B:0 };
+let current = null; // {catIdx, qIdx}
+
+function buildBoard(){
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  DATA.forEach((cat) => {
+    const h = document.createElement('div');
+    h.className = 'cat-head';
+    h.textContent = cat.cat;
+    board.appendChild(h);
+  });
+  const maxRows = Math.max(...DATA.map(c => c.qs.length));
+  for(let r=0; r<maxRows; r++){
+    DATA.forEach((cat, ci) => {
+      const q = cat.qs[r];
+      const tile = document.createElement('div');
+      tile.className = 'tile';
+      tile.id = `tile-${ci}-${r}`;
+      tile.innerHTML = `<span>${q.pts}</span>`;
+      tile.onclick = () => openTile(ci, r);
+      board.appendChild(tile);
+    });
+  }
+}
+
+function openTile(ci, qi){
+  const tileEl = document.getElementById(`tile-${ci}-${qi}`);
+  if(tileEl.classList.contains('used')) return;
+  current = { ci, qi };
+  const cat = DATA[ci];
+  const q = cat.qs[qi];
+  document.getElementById('lbCat').textContent = cat.cat;
+  document.getElementById('lbPts').textContent = q.pts;
+  document.getElementById('lbQ').textContent = q.q;
+  document.getElementById('lbA').textContent = q.a;
+  document.getElementById('ansBlock').classList.remove('show');
+  document.getElementById('revealBtn').disabled = false;
+  document.getElementById('awardABtn').disabled = true;
+  document.getElementById('awardBBtn').disabled = true;
+  document.getElementById('overlay').classList.add('show');
+}
+
+function revealAnswer(){
+  document.getElementById('ansBlock').classList.add('show');
+  document.getElementById('revealBtn').disabled = true;
+  document.getElementById('awardABtn').disabled = false;
+  document.getElementById('awardBBtn').disabled = false;
+}
+
+function award(team){
+  if(!current) return;
+  const q = DATA[current.ci].qs[current.qi];
+  scores[team] += q.pts;
+  document.getElementById(`score${team}`).textContent = scores[team];
+  markUsed();
+  closeOverlay();
+}
+
+function markUsed(){
+  if(!current) return;
+  document.getElementById(`tile-${current.ci}-${current.qi}`).classList.add('used');
+}
+
+function closeOverlay(){
+  if(current){ markUsed(); }
+  document.getElementById('overlay').classList.remove('show');
+  current = null;
+}
+
+function bump(team, amt){
+  scores[team] += amt;
+  document.getElementById(`score${team}`).textContent = scores[team];
+}
+
+function resetGame(){
+  scores = { A:0, B:0 };
+  document.getElementById('scoreA').textContent = 0;
+  document.getElementById('scoreB').textContent = 0;
+  buildBoard();
+}
+
+buildBoard();
+</script>
+</body>
+</html>

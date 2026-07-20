@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bone Detective — The Ward Round Challenge</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Source+Serif+4:opsz,wght@8..60,400;8..60,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --lightbox:#0b1626;
+    --lightbox-2:#0f1e33;
+    --panel:#122540;
+    --film:#e8ecf1;
+    --amber:#f2a541;
+    --amber-dim:#8a6224;
+    --cyan:#4fd1c5;
+    --cyan-dim:#245450;
+    --red:#e2554f;
+    --red-dim:#5c2624;
+    --line: rgba(232,236,241,0.12);
+    --line-strong: rgba(232,236,241,0.24);
+    --text-soft: rgba(232,236,241,0.62);
+    --text-faint: rgba(232,236,241,0.38);
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0;
+    background:
+      radial-gradient(ellipse 900px 500px at 50% -10%, var(--lightbox-2), transparent 60%),
+      var(--lightbox);
+    color:var(--film);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+  }
+  .wrap{max-width:760px;margin:0 auto;padding:40px 20px 80px;}
+  .mono{font-family:'Space Mono',monospace;}
+  .serif{font-family:'Source Serif 4',serif;}
+
+  /* header strip mimicking a film jacket label */
+  .jacket{
+    border:1px solid var(--line-strong);
+    border-radius:4px;
+    padding:14px 18px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:28px;
+    background: repeating-linear-gradient(135deg, rgba(255,255,255,0.015) 0 2px, transparent 2px 6px);
+  }
+  .jacket .id{font-size:12px; letter-spacing:0.08em; color:var(--text-faint); text-transform:uppercase;}
+  .jacket .status{font-size:12px; letter-spacing:0.06em; color:var(--amber);}
+  .dot{display:inline-block;width:6px;height:6px;border-radius:50%;background:var(--amber);margin-right:6px;box-shadow:0 0 6px var(--amber);}
+
+  h1.title{
+    font-family:'Source Serif 4',serif;
+    font-weight:600;
+    font-size:34px;
+    letter-spacing:-0.01em;
+    margin:0 0 6px;
+  }
+  .subtitle{color:var(--text-soft); font-size:15px; margin:0 0 28px; line-height:1.6;}
+
+  .btn{
+    font-family:'Inter',sans-serif;
+    font-weight:600;
+    font-size:14px;
+    letter-spacing:0.02em;
+    color:var(--lightbox);
+    background:var(--amber);
+    border:none;
+    padding:12px 22px;
+    border-radius:3px;
+    cursor:pointer;
+    transition:transform 0.12s ease, box-shadow 0.12s ease;
+  }
+  .btn:hover{ box-shadow:0 0 0 3px rgba(242,165,65,0.25); }
+  .btn:active{ transform:scale(0.98); }
+  .btn.ghost{
+    background:transparent;
+    color:var(--film);
+    border:1px solid var(--line-strong);
+  }
+  .btn.ghost:hover{ border-color:var(--amber); color:var(--amber); box-shadow:none;}
+  .btn:disabled{opacity:0.35; cursor:not-allowed;}
+
+  .card{
+    border:1px solid var(--line);
+    border-radius:6px;
+    background:rgba(232,236,241,0.03);
+    padding:22px 24px;
+    margin-bottom:16px;
+  }
+
+  /* ---- intro screen ---- */
+  .rounds-preview{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:22px 0 30px;}
+  .rp-card{ border:1px solid var(--line); border-radius:5px; padding:16px 14px; }
+  .rp-card .n{ font-family:'Space Mono',monospace; color:var(--amber); font-size:12px; letter-spacing:0.08em;}
+  .rp-card h3{ font-size:15px; margin:8px 0 6px; font-weight:600;}
+  .rp-card p{ font-size:12.5px; color:var(--text-soft); margin:0; line-height:1.5;}
+
+  /* ---- progress bar ---- */
+  .progress-row{ display:flex; align-items:center; gap:14px; margin-bottom:22px;}
+  .progress-track{ flex:1; height:4px; background:var(--line); border-radius:2px; overflow:hidden;}
+  .progress-fill{ height:100%; background:var(--amber); width:0%; transition:width 0.3s ease;}
+  .score-chip{ font-family:'Space Mono',monospace; font-size:13px; color:var(--amber); white-space:nowrap;}
+  .timer-chip{ font-family:'Space Mono',monospace; font-size:13px; color:var(--cyan); white-space:nowrap; min-width:46px; text-align:right;}
+  .timer-chip.low{ color:var(--red);}
+
+  /* ---- question ---- */
+  .q-label{ font-size:11.5px; letter-spacing:0.1em; text-transform:uppercase; color:var(--text-faint); margin-bottom:10px;}
+  .q-text{ font-family:'Source Serif 4',serif; font-size:20px; line-height:1.5; margin:0 0 22px;}
+  .options{ display:flex; flex-direction:column; gap:10px; margin-bottom:6px;}
+  .opt{
+    text-align:left;
+    border:1px solid var(--line-strong);
+    background:transparent;
+    color:var(--film);
+    padding:13px 16px;
+    border-radius:4px;
+    font-size:15px;
+    font-family:'Inter',sans-serif;
+    cursor:pointer;
+    transition:border-color 0.12s ease, background 0.12s ease;
+  }
+  .opt:hover:not(:disabled){ border-color:var(--amber); background:rgba(242,165,65,0.06);}
+  .opt:disabled{ cursor:default; }
+  .opt.correct{ border-color:var(--cyan); background:rgba(79,209,197,0.12); color:var(--cyan);}
+  .opt.wrong{ border-color:var(--red); background:rgba(226,85,79,0.12); color:var(--red);}
+  .opt.dim{ opacity:0.4; }
+
+  .feedback{ font-size:13.5px; color:var(--text-soft); margin:14px 0 4px; line-height:1.6; padding:12px 14px; border-left:2px solid var(--amber); background:rgba(242,165,65,0.04); border-radius:0 4px 4px 0;}
+  .feedback.good{ border-left-color:var(--cyan); }
+  .feedback.bad{ border-left-color:var(--red); }
+
+  .foot-row{ display:flex; justify-content:flex-end; margin-top:18px;}
+
+  /* ---- matching round ---- */
+  .match-grid{ display:grid; grid-template-columns:repeat(4,1fr); gap:10px; }
+  .match-card{
+    border:1px solid var(--line-strong);
+    border-radius:5px;
+    background:rgba(232,236,241,0.03);
+    padding:14px 10px;
+    min-height:78px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    text-align:center;
+    font-size:12.5px;
+    line-height:1.4;
+    cursor:pointer;
+    transition:border-color 0.12s ease, background 0.12s ease, opacity 0.2s ease;
+  }
+  .match-card.term{ font-weight:600; color:var(--amber); }
+  .match-card:hover:not(.solved):not(.selected){ border-color:var(--amber); }
+  .match-card.selected{ border-color:var(--cyan); background:rgba(79,209,197,0.1); }
+  .match-card.solved{ opacity:0.22; cursor:default; border-color:var(--line); }
+  .match-card.shake{ border-color:var(--red); }
+  @media (max-width:640px){ .match-grid{ grid-template-columns:repeat(2,1fr);} .rounds-preview{grid-template-columns:1fr;} }
+
+  /* ---- final screen ---- */
+  .rank-badge{
+    display:inline-block;
+    padding:8px 20px;
+    border:1px solid var(--amber);
+    color:var(--amber);
+    border-radius:3px;
+    font-family:'Space Mono',monospace;
+    font-size:13px;
+    letter-spacing:0.08em;
+    margin-bottom:18px;
+  }
+  .final-score{ font-family:'Source Serif 4',serif; font-size:52px; margin:0 0 4px;}
+  .stat-grid{ display:grid; grid-template-columns:repeat(3,1fr); gap:12px; margin:22px 0;}
+  .stat-card{ border:1px solid var(--line); border-radius:5px; padding:14px; text-align:center;}
+  .stat-card .v{ font-family:'Space Mono',monospace; font-size:22px; color:var(--amber);}
+  .stat-card .l{ font-size:11.5px; color:var(--text-soft); margin-top:4px; text-transform:uppercase; letter-spacing:0.06em;}
+
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0;}
+  .hidden{ display:none !important; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h2 class="sr-only">Bone Detective: an interactive quiz game for MBBS students on musculoskeletal infections, with a rapid diagnosis round, a sign-matching round, and a case-file round.</h2>
+
+  <div class="jacket">
+    <span class="id mono">CASE FILE // MSK-INFECT-01</span>
+    <span class="status mono"><span class="dot"></span>LIGHTBOX ACTIVE</span>
+  </div>
+
+  <!-- SCREEN: INTRO -->
+  <div id="screen-intro">
+    <h1 class="title">Bone Detective</h1>
+    <p class="subtitle">The Ward Round Challenge — three rounds on septic arthritis, Tom Smith disease, acute &amp; chronic osteomyelitis, Garré's osteomyelitis, and Brodie's abscess. Read the clues, beat the clock, get the diagnosis right.</p>
+
+    <div class="rounds-preview">
+      <div class="rp-card">
+        <div class="n">ROUND 01</div>
+        <h3>Rapid diagnosis</h3>
+        <p>10 timed questions. Answer fast for a speed bonus.</p>
+      </div>
+      <div class="rp-card">
+        <div class="n">ROUND 02</div>
+        <h3>Sign match</h3>
+        <p>Pair each eponym or sign with its correct definition.</p>
+      </div>
+      <div class="rp-card">
+        <div class="n">ROUND 03</div>
+        <h3>Case files</h3>
+        <p>Three patient vignettes. One diagnosis each — no time limit.</p>
+      </div>
+    </div>
+
+    <button class="btn" onclick="startGame()">Begin round 1 →</button>
+  </div>
+
+  <!-- SCREEN: ROUND 1 -->
+  <div id="screen-r1" class="hidden">
+    <div class="progress-row">
+      <span class="score-chip" id="r1-score">SCORE 0</span>
+      <div class="progress-track"><div class="progress-fill" id="r1-progress"></div></div>
+      <span class="timer-chip" id="r1-timer">20s</span>
+    </div>
+    <div class="card">
+      <div class="q-label" id="r1-label">QUESTION 1 OF 10</div>
+      <p class="q-text serif" id="r1-question"></p>
+      <div class="options" id="r1-options"></div>
+      <div id="r1-feedback"></div>
+      <div class="foot-row">
+        <button class="btn hidden" id="r1-next" onclick="nextR1()">Next →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: ROUND 2 -->
+  <div id="screen-r2" class="hidden">
+    <div class="progress-row">
+      <span class="score-chip" id="r2-score">SCORE 0</span>
+      <div class="progress-track"><div class="progress-fill" id="r2-progress"></div></div>
+      <span class="score-chip" id="r2-moves">0 MOVES</span>
+    </div>
+    <div class="card">
+      <div class="q-label">MATCH EACH SIGN TO ITS DEFINITION — <span id="r2-remaining">8</span> PAIRS LEFT</div>
+      <div class="match-grid" id="r2-grid"></div>
+    </div>
+    <div class="foot-row">
+      <button class="btn hidden" id="r2-next" onclick="startRound3()">Continue to round 3 →</button>
+    </div>
+  </div>
+
+  <!-- SCREEN: ROUND 3 -->
+  <div id="screen-r3" class="hidden">
+    <div class="progress-row">
+      <span class="score-chip" id="r3-score">SCORE 0</span>
+      <div class="progress-track"><div class="progress-fill" id="r3-progress"></div></div>
+      <span class="mono" style="font-size:13px;color:var(--text-faint);" id="r3-label">CASE 1 OF 3</span>
+    </div>
+    <div class="card">
+      <div class="q-label">PATIENT VIGNETTE</div>
+      <p class="q-text serif" id="r3-vignette" style="font-size:17px;"></p>
+      <div class="q-label" style="margin-top:18px;">MOST LIKELY DIAGNOSIS?</div>
+      <div class="options" id="r3-options"></div>
+      <div id="r3-feedback"></div>
+      <div class="foot-row">
+        <button class="btn hidden" id="r3-next" onclick="nextR3()">Next case →</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCREEN: FINAL -->
+  <div id="screen-final" class="hidden">
+    <div class="q-label">FINAL REPORT</div>
+    <div class="rank-badge mono" id="final-rank">RANK</div>
+    <div class="final-score mono" id="final-score">0</div>
+    <p class="subtitle" id="final-line" style="margin-top:0;"></p>
+
+    <div class="stat-grid">
+      <div class="stat-card"><div class="v" id="stat-r1">0/100</div><div class="l">Rapid diagnosis</div></div>
+      <div class="stat-card"><div class="v" id="stat-r2">0/80</div><div class="l">Sign match</div></div>
+      <div class="stat-card"><div class="v" id="stat-r3">0/60</div><div class="l">Case files</div></div>
+    </div>
+
+    <button class="btn" onclick="location.reload()">Play again</button>
+    <button class="btn ghost" style="margin-left:10px;" onclick="sendPrompt('Give me 10 more MCQs on musculoskeletal infections to keep practicing.')">Request more questions ↗</button>
+  </div>
+</div>
+
+<script>
+/* ---------------- DATA ---------------- */
+const R1 = [
+  { q: "The most common site of acute hematogenous osteomyelitis in a growing child is the:", opts: ["Diaphysis","Metaphysis","Epiphysis","Apophysis"], a: 1,
+    fb: "Correct answer: metaphysis. Sluggish flow in the sinusoidal metaphyseal veins lets bacteria settle out of circulation." },
+  { q: "The single most common causative organism of osteomyelitis at any age is:", opts: ["Streptococcus pyogenes","Staphylococcus aureus","Escherichia coli","Pseudomonas aeruginosa"], a: 1,
+    fb: "Correct answer: Staphylococcus aureus — the leading organism across all age groups and most sites." },
+  { q: "In a child with sickle cell disease, osteomyelitis is classically caused by:", opts: ["Salmonella species","Klebsiella pneumoniae","Neisseria gonorrhoeae","Kingella kingae"], a: 0,
+    fb: "Correct answer: Salmonella. Bowel infarction from sickling allows Salmonella translocation into the bloodstream." },
+  { q: "A puncture wound through a rubber-soled sneaker classically predisposes to osteomyelitis with:", opts: ["Pseudomonas aeruginosa","Staphylococcus epidermidis","Clostridium species","Bacteroides fragilis"], a: 0,
+    fb: "Correct answer: Pseudomonas aeruginosa, inoculated from the shoe's insole into the foot." },
+  { q: "Tom Smith disease refers to:", opts: ["Chronic sclerosing osteomyelitis of the mandible","Neonatal septic arthritis of the hip with epiphyseal separation","Tuberculous arthritis of the knee","Subacute osteomyelitis with a sclerotic rim"], a: 1,
+    fb: "Correct answer: neonatal hip septic arthritis with epiphyseal separation/destruction — easily missed because signs are subtle in neonates." },
+  { q: "The radiological hallmark of Garré's osteomyelitis is:", opts: ["A lucent lesion with a sclerotic rim","Fusiform sclerotic cortical thickening with no abscess or sequestrum","A lamellated 'onion-peel' periosteal reaction","A punched-out lytic lesion with a soft tissue mass"], a: 1,
+    fb: "Correct answer: dense fusiform sclerosis of the cortex with NO abscess or sequestrum — it's non-suppurative." },
+  { q: "The MRI 'penumbra sign' is characteristically described in:", opts: ["Garré's osteomyelitis","Ewing's sarcoma","Brodie's abscess","Tuberculous osteomyelitis"], a: 2,
+    fb: "Correct answer: Brodie's abscess — a thin intermediate-signal rim between the central pus and the outer sclerotic bone." },
+  { q: "The most sensitive imaging modality within the first week of osteomyelitis, before X-ray changes appear, is:", opts: ["Plain radiography","MRI","Ultrasound","CT scan"], a: 1,
+    fb: "Correct answer: MRI — detects marrow edema and abscess well before plain films show lysis (which lags 7-10 days)." },
+  { q: "A chronic discharging sinus that suddenly becomes everted, indurated, and starts bleeding should raise suspicion of:", opts: ["Secondary amyloidosis","Marjolin's ulcer (squamous cell carcinoma)","Tuberculous sinus","Osteoid osteoma"], a: 1,
+    fb: "Correct answer: Marjolin's ulcer — malignant transformation in a chronic sinus/scar." },
+  { q: "Per the Kocher criteria, which finding most favors septic arthritis over transient synovitis of the hip?", opts: ["ESR under 20 mm/hr","Ability to bear weight","Fever above 38.5°C with inability to bear weight","A normal WBC count"], a: 2,
+    fb: "Correct answer: fever >38.5°C with non-weight-bearing — two of the four Kocher criteria (with ESR>40 and WBC>12,000)." },
+];
+
+const R2_PAIRS = [
+  { term: "Sequestrum", def: "A fragment of dead, necrotic bone separated from living bone" },
+  { term: "Involucrum", def: "A shell of new bone laid down around a sequestrum" },
+  { term: "Cloaca", def: "An opening in the involucrum through which pus drains" },
+  { term: "Codman triangle", def: "Elevated periosteum forming a reactive triangular spur" },
+  { term: "Onion-peel sign", def: "Lamellated, multi-layered periosteal reaction" },
+  { term: "Penumbra sign", def: "Faint intermediate rim around a subacute bone abscess on MRI" },
+  { term: "Kocher criteria", def: "Clinical score separating septic hip from transient synovitis" },
+  { term: "Marjolin's ulcer", def: "Squamous cell carcinoma arising in a chronic sinus or scar" },
+];
+
+const R3 = [
+  { v: "A 3-day-old neonate with an umbilical venous catheter placed at birth is irritable, feeds poorly, and holds the right lower limb still (pseudoparalysis). The right hip is warm and swollen; blood counts show leukocytosis.",
+    opts: ["Transient synovitis","Tom Smith disease (neonatal septic arthritis)","Juvenile idiopathic arthritis","Garré's osteomyelitis"], a: 1,
+    fb: "Tom Smith disease — neonatal hip sepsis, often from a line/instrumentation source, that can destroy the epiphysis if missed. Emergency drainage plus IV antibiotics are needed to prevent coxa vara or dislocation." },
+  { v: "A 10-year-old has dull aching pain over the distal tibia for 3 months with low-grade fever and mild swelling, but no sinus. X-ray shows a well-defined lucent metaphyseal lesion with a surrounding sclerotic rim; no sequestrum.",
+    opts: ["Ewing's sarcoma","Garré's osteomyelitis","Brodie's abscess","Acute hematogenous osteomyelitis"], a: 2,
+    fb: "Brodie's abscess — a subacute, localized abscess with a sclerotic rim; MRI would likely show the penumbra sign. It can mimic a bone tumour clinically and radiologically." },
+  { v: "A 35-year-old man has a chronically discharging tibial sinus, 8 years after a surgically treated open fracture. The sinus edge has recently become everted, indurated, and started bleeding on touch.",
+    opts: ["Chronic osteomyelitis with Marjolin's ulcer","Simple sinus recurrence","Garré's osteomyelitis","Osteoid osteoma"], a: 0,
+    fb: "Chronic osteomyelitis complicated by Marjolin's ulcer — any change in a long-standing sinus's character (everted edge, bleeding, growth) needs urgent biopsy to rule out malignant transformation." },
+];
+
+/* ---------------- STATE ---------------- */
+let score = { r1:0, r2:0, r3:0 };
+let r1Index = 0, r1Timer = null, r1TimeLeft = 20, r1Answered = false;
+let r2Selected = null, r2Moves = 0, r2Solved = 0, r2Cards = [];
+let r3Index = 0, r3Answered = false;
+
+function totalScore(){ return score.r1 + score.r2 + score.r3; }
+
+function startGame(){
+  document.getElementById('screen-intro').classList.add('hidden');
+  document.getElementById('screen-r1').classList.remove('hidden');
+  loadR1(r1Index);
+}
+
+/* ---------------- ROUND 1 ---------------- */
+function loadR1(i){
+  r1Answered = false;
+  const item = R1[i];
+  document.getElementById('r1-label').textContent = `QUESTION ${i+1} OF ${R1.length}`;
+  document.getElementById('r1-question').textContent = item.q;
+  document.getElementById('r1-progress').style.width = `${(i/R1.length)*100}%`;
+  document.getElementById('r1-score').textContent = `SCORE ${score.r1}`;
+  document.getElementById('r1-feedback').innerHTML = '';
+  document.getElementById('r1-next').classList.add('hidden');
+
+  const optsWrap = document.getElementById('r1-options');
+  optsWrap.innerHTML = '';
+  item.opts.forEach((opt, idx) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = opt;
+    b.onclick = () => answerR1(idx);
+    optsWrap.appendChild(b);
+  });
+
+  r1TimeLeft = 20;
+  updateR1Timer();
+  clearInterval(r1Timer);
+  r1Timer = setInterval(() => {
+    r1TimeLeft--;
+    updateR1Timer();
+    if (r1TimeLeft <= 0){ clearInterval(r1Timer); if(!r1Answered) answerR1(-1); }
+  }, 1000);
+}
+
+function updateR1Timer(){
+  const el = document.getElementById('r1-timer');
+  el.textContent = `${r1TimeLeft}s`;
+  el.classList.toggle('low', r1TimeLeft <= 5);
+}
+
+function answerR1(idx){
+  if (r1Answered) return;
+  r1Answered = true;
+  clearInterval(r1Timer);
+  const item = R1[r1Index];
+  const buttons = document.querySelectorAll('#r1-options .opt');
+  buttons.forEach((b, i) => {
+    b.disabled = true;
+    if (i === item.a) b.classList.add('correct');
+    else if (i === idx) b.classList.add('wrong');
+    else b.classList.add('dim');
+  });
+  let gained = 0;
+  const fbDiv = document.getElementById('r1-feedback');
+  if (idx === item.a){
+    gained = 10 + Math.max(0, Math.round(r1TimeLeft / 4));
+    fbDiv.innerHTML = `<div class="feedback good">Correct — +${gained} pts. ${item.fb}</div>`;
+  } else {
+    fbDiv.innerHTML = `<div class="feedback bad">${idx === -1 ? "Time's up." : "Not quite."} ${item.fb}</div>`;
+  }
+  score.r1 += gained;
+  document.getElementById('r1-score').textContent = `SCORE ${score.r1}`;
+  document.getElementById('r1-next').classList.remove('hidden');
+}
+
+function nextR1(){
+  r1Index++;
+  if (r1Index < R1.length){
+    loadR1(r1Index);
+  } else {
+    document.getElementById('r1-progress').style.width = '100%';
+    document.getElementById('screen-r1').classList.add('hidden');
+    document.getElementById('screen-r2').classList.remove('hidden');
+    setupR2();
+  }
+}
+
+/* ---------------- ROUND 2 ---------------- */
+function shuffle(arr){
+  const a = [...arr];
+  for (let i = a.length - 1; i > 0; i--){
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+function setupR2(){
+  const terms = R2_PAIRS.map((p, i) => ({ id:i, type:'term', text:p.term }));
+  const defs = R2_PAIRS.map((p, i) => ({ id:i, type:'def', text:p.def }));
+  r2Cards = shuffle([...terms, ...defs]);
+  r2Selected = null;
+  r2Moves = 0;
+  r2Solved = 0;
+  document.getElementById('r2-remaining').textContent = R2_PAIRS.length;
+  renderR2();
+}
+
+function renderR2(){
+  const grid = document.getElementById('r2-grid');
+  grid.innerHTML = '';
+  r2Cards.forEach((c, idx) => {
+    const div = document.createElement('div');
+    div.className = `match-card ${c.type}`;
+    if (c.solved) div.classList.add('solved');
+    if (r2Selected === idx) div.classList.add('selected');
+    div.textContent = c.text;
+    div.onclick = () => selectR2(idx);
+    grid.appendChild(div);
+  });
+  document.getElementById('r2-score').textContent = `SCORE ${score.r2}`;
+  document.getElementById('r2-moves').textContent = `${r2Moves} MOVES`;
+  document.getElementById('r2-progress').style.width = `${(r2Solved / R2_PAIRS.length) * 100}%`;
+}
+
+function selectR2(idx){
+  const card = r2Cards[idx];
+  if (card.solved || idx === r2Selected) return;
+
+  if (r2Selected === null){
+    r2Selected = idx;
+    renderR2();
+    return;
+  }
+
+  const first = r2Cards[r2Selected];
+  r2Moves++;
+  if (first.id === card.id && first.type !== card.type){
+    first.solved = true;
+    card.solved = true;
+    r2Solved++;
+    score.r2 += 10;
+    r2Selected = null;
+    document.getElementById('r2-remaining').textContent = R2_PAIRS.length - r2Solved;
+    renderR2();
+    if (r2Solved === R2_PAIRS.length){
+      document.getElementById('r2-next').classList.remove('hidden');
+    }
+  } else {
+    renderR2();
+    const els = document.querySelectorAll('#r2-grid .match-card');
+    els[idx].classList.add('shake');
+    els[r2Selected].classList.add('shake');
+    setTimeout(() => { r2Selected = null; renderR2(); }, 500);
+  }
+}
+
+/* ---------------- ROUND 3 ---------------- */
+function startRound3(){
+  document.getElementById('screen-r2').classList.add('hidden');
+  document.getElementById('screen-r3').classList.remove('hidden');
+  loadR3(r3Index);
+}
+
+function loadR3(i){
+  r3Answered = false;
+  const item = R3[i];
+  document.getElementById('r3-label').textContent = `CASE ${i+1} OF ${R3.length}`;
+  document.getElementById('r3-vignette').textContent = item.v;
+  document.getElementById('r3-progress').style.width = `${(i/R3.length)*100}%`;
+  document.getElementById('r3-score').textContent = `SCORE ${score.r3}`;
+  document.getElementById('r3-feedback').innerHTML = '';
+  document.getElementById('r3-next').classList.add('hidden');
+
+  const optsWrap = document.getElementById('r3-options');
+  optsWrap.innerHTML = '';
+  item.opts.forEach((opt, idx) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = opt;
+    b.onclick = () => answerR3(idx);
+    optsWrap.appendChild(b);
+  });
+}
+
+function answerR3(idx){
+  if (r3Answered) return;
+  r3Answered = true;
+  const item = R3[r3Index];
+  const buttons = document.querySelectorAll('#r3-options .opt');
+  buttons.forEach((b, i) => {
+    b.disabled = true;
+    if (i === item.a) b.classList.add('correct');
+    else if (i === idx) b.classList.add('wrong');
+    else b.classList.add('dim');
+  });
+  const fbDiv = document.getElementById('r3-feedback');
+  if (idx === item.a){
+    score.r3 += 20;
+    fbDiv.innerHTML = `<div class="feedback good">Correct — +20 pts. ${item.fb}</div>`;
+  } else {
+    fbDiv.innerHTML = `<div class="feedback bad">Not quite. ${item.fb}</div>`;
+  }
+  document.getElementById('r3-score').textContent = `SCORE ${score.r3}`;
+  document.getElementById('r3-next').classList.remove('hidden');
+}
+
+function nextR3(){
+  r3Index++;
+  if (r3Index < R3.length){
+    loadR3(r3Index);
+  } else {
+    document.getElementById('r3-progress').style.width = '100%';
+    showFinal();
+  }
+}
+
+/* ---------------- FINAL ---------------- */
+function showFinal(){
+  document.getElementById('screen-r3').classList.add('hidden');
+  document.getElementById('screen-final').classList.remove('hidden');
+
+  const total = totalScore();
+  const max = 240;
+  document.getElementById('final-score').textContent = total;
+  document.getElementById('stat-r1').textContent = `${score.r1}/100`;
+  document.getElementById('stat-r2').textContent = `${score.r2}/80`;
+  document.getElementById('stat-r3').textContent = `${score.r3}/60`;
+
+  let rank, line;
+  const pct = total / max;
+  if (pct >= 0.85){ rank = "MASTER DIAGNOSTICIAN"; line = "Consultant-level pattern recognition — you'd catch a Brodie's abscess on a busy OPD day."; }
+  else if (pct >= 0.65){ rank = "SENIOR RESIDENT"; line = "Strong grasp of the high-yield facts, with a few gaps worth a second pass."; }
+  else if (pct >= 0.45){ rank = "JUNIOR RESIDENT"; line = "Good foundation — revisit the sign-match round before your next viva."; }
+  else { rank = "INTERN — KEEP PRACTICING"; line = "Worth another attempt after re-reading the eponyms and imaging signs."; }
+
+  document.getElementById('final-rank').textContent = rank;
+  document.getElementById('final-line').textContent = line;
+}
+</script>
+</body>
+</html>
